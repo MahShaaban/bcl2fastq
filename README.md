@@ -4,7 +4,7 @@ This repo contains a workflow that takes sequencing output from an Illumina sequ
 
 ## Part A: Setup
 
-**NOTE:** Some of the setup instructions are tailored for working on Oregon Health and Science University's Linux-based high-performance computing cluster (ARC, formerly Exacloud). If you have access to another computing cluster, then some steps may need to be modified accordingly.
+**NOTE:** Some of the setup instructions are tailored for Maxson and Braun Lab needs and for working on Oregon Health and Science University's Linux-based high-performance computing cluster (ARC, formerly Exacloud). If you have access to another computing cluster, then some steps may need to be modified accordingly.
 
 
 ### 1. Create file/folder structure
