@@ -50,6 +50,8 @@ EXP250101JM_CUTTAG
 
 If you have limited access to the original raw sequencer output, then you can make a temporary copy of it in the `nondemultiplexed` folder.
 
+If you do not have access to the original sequencer output, then you can request that someone in the lab with access copy the data for you. They may also need to add group-level read/write permissions to the main dataset folders so that you are able to run the demultiplexing and generate necessary files.
+
 
 ### 3. Prepare SampleSheet.csv
 
