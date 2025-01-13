@@ -83,9 +83,9 @@ You will also need to change Data columns such as Sample_ID, Sample_Project, ind
 
 You will need to set a few runtime paths/parameters as described in the instructions in each of the following scripts:
 
-* `1-run_bcl2fastq.sh`: Set the `runfolder_directory` and `output_directory` paths
-* `2-run_fastqc.sh`: Set the `fastq_folders_array` path(s)
-* `3-run_multiqc.sh`: Set the `report_title`
+* __1-run_bcl2fastq.sh__: Set the `runfolder_directory` and `output_directory` paths
+* __2-run_fastqc.sh__: Set the `fastq_folders_array` path(s)
+* __3-run_multiqc.sh__: Set the `report_title`
 
 
 ### 5. Install Conda environments
