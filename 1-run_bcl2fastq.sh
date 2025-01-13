@@ -46,7 +46,8 @@ bcl2fastq -R ${runfolder_directory} \
 -o ${output_directory} \
 --sample-sheet ${samplesheet_path} \
 --no-bgzf-compression \
---fastq-compression-level=9 \
+--fastq-compression-level 9 \
+--barcode-mismatches 1 \
 --processing-threads ${SLURM_CPUS_PER_TASK}
 
 # echo current date/time into log file
