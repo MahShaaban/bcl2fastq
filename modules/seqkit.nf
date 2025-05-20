@@ -1,5 +1,5 @@
 process SEQKIT {
-    tag "${cohort}:${index.IndexSequence}"
+    tag "${cohort}:${sampleid}:${index}"
 
     label 'simple'
     label 'seqkit'
@@ -7,28 +7,21 @@ process SEQKIT {
     publishDir("${params.output_dir}/fastq_retrieved", mode: 'copy')
 
     input:
-    tuple val(cohort), val(sampleid), val(sample), path(fastq), path(ids), val(index)
+    tuple val(cohort), val(index), path(ids),
+          val(sampleid), val(sample), path(fastq)
 
     output:
-    tuple val(cohort), val(sampleid), val("${cohort}.${index.IndexSequence}"),
-          path("${cohort}.${index.IndexSequence}.fastq.gz")
+    tuple val(cohort), val(sampleid), val("${cohort}.${sampleid}.${index}"),
+          path("${cohort}.${sampleid}.${index}.fastq.gz")
 
     script:
     """
     #!/bin/bash
-    # List read ids in fastq file 
-    cat ${ids} | \
-    grep ${index.IndexSequence} | \
-    cut -d ' ' -f1 \
-    > ${cohort}.${index.IndexSequence}.ids.txt
-
-    # List reads in fastq file
+    # Get reads in fastq file
     seqkit grep \
-    -f ${cohort}.${index.IndexSequence}.ids.txt \
+    -j ${task.cpus} \
+    -f ${ids} \
     ${fastq} \
-    -o ${cohort}.${index.IndexSequence}.fastq.gz
-
-    # Count number of reads in fastq file
-    n_reads=\$(wc -l ${cohort}.${index.IndexSequence}.ids.txt)
+    -o ${cohort}.${sampleid}.${index}.fastq.gz
     """
 }

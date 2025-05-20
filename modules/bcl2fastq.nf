@@ -22,7 +22,7 @@ process BCL2FASTQ {
         --adapter-stringency ${params.stringency} \
         --fastq-compression-level ${params.compression} \
         --barcode-mismatches ${params.mismatches} \
-        --write-fastq-reverse-complement \
+        --ignore-missing-bcls \
         --find-adapters-with-sliding-window \
         --no-bgzf-compression \
         --loading-threads ${task.cpus} \

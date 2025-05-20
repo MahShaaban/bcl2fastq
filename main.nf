@@ -58,12 +58,9 @@ workflow extract_by_index {
         | map { cohort, row -> [cohort, [ Flowcell: row.Flowcell, LaneNumber: row.LaneNumber, IndexSequence: row.IndexSequence, ReadNumber: row.ReadNumber ]]}
         | unique
         | filter { it.last().ReadNumber.toInteger() > params.min_read } 
-        | set { indexes }
-
-    // Extract index sequences from fastq files
-    undetermined
+        | combine(undetermined, by: 0)
         | EXTRACT
-        | combine(indexes, by: 0)
+        | combine(undetermined, by: 0)
         | SEQKIT
 
     emit:
