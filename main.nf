@@ -8,7 +8,9 @@ include { FASTQC }      from './modules/fastqc.nf'
 include { MULTIQC }     from './modules/multiqc.nf'
 include { STATS }       from './modules/stats.nf'
 include { EXTRACT }     from './modules/extract.nf'
-include { SEQKIT }      from './modules/seqkit.nf'
+include { RETRIEVE }    from './modules/retrieve.nf'
+include { SPLIT }       from './modules/split.nf'
+include { COMBINE }     from './modules/combine.nf'
 
 // Demultiplexing bcl files
 workflow demultiplex_bcl_files {
@@ -50,6 +52,14 @@ workflow extract_by_index {
         stats
 
     main:
+    undetermined
+        | SPLIT
+        | transpose
+        | map { cohort, sampleid, sample, fastq -> 
+            [ cohort, sampleid, sample, fastq.name.find( /\d+/ ), fastq ]
+        }
+        | set { fastq }
+
     // Get index sequences from fastq files
     stats
         | STATS
@@ -58,13 +68,16 @@ workflow extract_by_index {
         | map { cohort, row -> [cohort, [ Flowcell: row.Flowcell, LaneNumber: row.LaneNumber, IndexSequence: row.IndexSequence, ReadNumber: row.ReadNumber ]]}
         | unique
         | filter { it.last().ReadNumber.toInteger() > params.min_read } 
-        | combine(undetermined, by: 0)
+        | combine(fastq, by: 0)
         | EXTRACT
-        | combine(undetermined, by: 0)
-        | SEQKIT
+        | filter { it.last().size() > 0 }
+        | RETRIEVE
+        | filter { it.last().size() > 0 }
+        | groupTuple(by: [0, 1, 2])
+        | COMBINE
 
     emit:
-        retrieved = SEQKIT.out
+        retrieved = COMBINE.out
 }
 
 // Check quality of fastq files
@@ -78,7 +91,7 @@ workflow check_quality {
         | FASTQC
         | groupTuple(by: [0, 1])
         | MULTIQC
-
+    // TODO: add seqkit fx2tab, and stats
     emit:
         qc = MULTIQC.out
 }
