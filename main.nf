@@ -52,12 +52,15 @@ workflow extract_by_index {
         stats
 
     main:
+    // Generate ranges channel
+    ranges_ch = Channel.from( (1..params.nseq).step(params.chunk).collect { i -> 
+            def end = Math.min(i + params.chunk - 1, params.nseq)
+            [ i, end ]
+        })
+
     undetermined
+        | combine(ranges_ch)
         | SPLIT
-        | transpose
-        | map { cohort, sampleid, sample, fastq -> 
-            [ cohort, sampleid, sample, fastq.name.find( /\d+/ ), fastq ]
-        }
         | set { fastq }
 
     // Get index sequences from fastq files
