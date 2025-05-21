@@ -1,5 +1,5 @@
 process SPLIT {
-    tag "${cohort}:${sampleid}:chunk_${from}-${to}"
+    tag "${cohort}:${sampleid}:${read}:${from}-${to}"
 
     label 'max'
     label 'seqkit'
@@ -7,12 +7,12 @@ process SPLIT {
     publishDir("${params.output_dir}/fastq_split", mode: 'copy')
 
     input:
-    tuple val(cohort), val(sampleid), val(sample), path(fastq),
+    tuple val(cohort), val(sampleid), val(sample), val(read), path(fastq),
           val(from), val(to)
 
     output:
-    tuple val(cohort), val(sampleid), val(sample), val(from), val(to),
-          path("chunk_${from}-${to}.fastq.gz")
+    tuple val(cohort), val(sampleid), val(sample), val(read), val(from), val(to),
+          path("${read}_chunk_${from}-${to}.fastq.gz")
 
     script:
     """
@@ -21,6 +21,6 @@ process SPLIT {
         -r ${from}:${to} \
         -j ${task.cpus} \
         ${fastq} \
-        -o chunk_${from}-${to}.fastq.gz
+        -o ${read}_chunk_${from}-${to}.fastq.gz
     """
 }

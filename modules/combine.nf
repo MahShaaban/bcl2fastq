@@ -1,5 +1,5 @@
 process COMBINE {
-    tag "${cohort}:${sampleid}:${index}"
+    tag "${cohort}:${sampleid}:${index}:${read}"
 
     label 'max'
     label 'seqkit'
@@ -7,11 +7,11 @@ process COMBINE {
     publishDir("${params.output_dir}/fastq_combined", mode: 'copy')
 
     input:
-    tuple val(cohort), val(sampleid), val(index), val(from), val(to), path(fastq)
+    tuple val(cohort), val(sampleid), val(index), val(read), val(from), val(to), path(fastq)
 
     output:
-    tuple val(cohort), val(sampleid), val("${cohort}.${sampleid}.${index}"),
-          path("${cohort}.${sampleid}.${index}.fastq.gz")
+    tuple val(cohort), val(sampleid), val(index), val(read),
+          path("${cohort}.${sampleid}.${index}.${read}.fastq.gz")
 
     script:
     """
@@ -19,6 +19,6 @@ process COMBINE {
 	seqkit concate \
 		--full ${fastq} \
 		--threads ${task.cpus} \
-		--out-file ${cohort}.${sampleid}.${index}.fastq.gz
+		--out-file ${cohort}.${sampleid}.${index}.${read}.fastq.gz
     """
 }

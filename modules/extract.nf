@@ -1,5 +1,5 @@
 process EXTRACT {
-    tag "${cohort}:${sampleid}:${index.IndexSequence}:chunk_${from}-${to}"
+    tag "${cohort}:${sampleid}:${index.IndexSequence}:${read}:${from}-${to}"
 
     label 'simple'
     label 'seqkit'
@@ -8,12 +8,12 @@ process EXTRACT {
 
     input:
     tuple val(cohort), val(index),
-          val(sampleid), val(sample), val(from), val(to), path(fastq)
+          val(sampleid), val(sample), val(read), val(from), val(to), path(fastq)
 
     output:
-    tuple val(cohort), val(sampleid), val("${index.IndexSequence}"), val(from), val(to),
+    tuple val(cohort), val(sampleid), val("${index.IndexSequence}"), val(read), val(from), val(to),
 		  path(fastq),
-		  path("${cohort}.${sampleid}.${index.IndexSequence}.chunk_${from}-${to}.ids.txt")
+		  path("${cohort}.${sampleid}.${index.IndexSequence}.${read}_chunk_${from}-${to}.ids.txt")
 
     script:
     """
@@ -22,6 +22,6 @@ process EXTRACT {
     seqkit seq ${fastq} --name -j ${task.cpus} | \
     grep ${index.IndexSequence} | \
     cut -d ' ' -f 1 \
-    > ${cohort}.${sampleid}.${index.IndexSequence}.chunk_${from}-${to}.ids.txt
+    > ${cohort}.${sampleid}.${index.IndexSequence}.${read}_chunk_${from}-${to}.ids.txt
     """
 }

@@ -10,7 +10,10 @@ process BCL2FASTQ {
     tuple val(cohort), path(bcl_dir), path(sample_sheet)
 
     output:
-    tuple val(cohort), path("*.fastq.gz"), path("Reports"), path("Stats/Stats.json")
+    tuple val(cohort),
+          path("*_*_*_R1_001.fastq.gz"), // samplename_sampleorder_lanenumber_readnumber_001.fastq.gz
+          path("${cohort}_reports"),
+          path("${cohort}_stats/Stats.json")
 
     script:
     """
@@ -27,6 +30,8 @@ process BCL2FASTQ {
         --no-bgzf-compression \
         --loading-threads ${task.cpus} \
         --processing-threads ${task.cpus} \
-        --writing-threads ${task.cpus}
+        --writing-threads ${task.cpus} \
+        --stats-dir ${cohort}_stats \
+        --reports-dir ${cohort}_reports
     """
 }

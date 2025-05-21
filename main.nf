@@ -11,6 +11,7 @@ include { EXTRACT }     from './modules/extract.nf'
 include { RETRIEVE }    from './modules/retrieve.nf'
 include { SPLIT }       from './modules/split.nf'
 include { COMBINE }     from './modules/combine.nf'
+include { PAIR }        from './modules/pair.nf'
 
 // Demultiplexing bcl files
 workflow demultiplex_bcl_files {
@@ -31,7 +32,13 @@ workflow demultiplex_bcl_files {
     // Split fastq files into determined and undetermined
     bcl_out.fastq
         | transpose
-        | map { [it.first(), it.last().simpleName.split('_')[0] == 'Undetermined' ? 'Undetermined' : 'Determined', it.last().simpleName, it.last() ] }
+        | map { [
+            it.first(),
+            it.last().simpleName.split('_')[0] == 'Undetermined' ? 'Undetermined' : 'Determined',
+            it.last().simpleName,
+            it.last().simpleName.split('_')[3],
+            it.last() 
+        ] }
         | branch {
             undetermined : it[1] == 'Undetermined'
             determined   : it[1] != 'Undetermined'
@@ -76,11 +83,16 @@ workflow extract_by_index {
         | filter { it.last().size() > 0 }
         | RETRIEVE
         | filter { it.last().size() > 0 }
-        | groupTuple(by: [0, 1, 2])
+        | groupTuple(by: [0, 1, 2, 3])
         | COMBINE
+        | groupTuple(by: [0, 1, 2])
+        | PAIR
+        | transpose
+        | map { [ it[0], it[1], "${it[0]}.${it[1]}.${it[2]}.${it[3]}.paired", it[3], it[4] ] }
+        | set { retrieved }
 
     emit:
-        retrieved = COMBINE.out
+        retrieved = retrieved
 }
 
 // Check quality of fastq files
@@ -110,22 +122,24 @@ workflow {
         cohorts_ch = Channel.fromPath(params.cohorts)
             | splitCsv(header: true, sep: ',')
             | map { row -> [ row.cohort, file(row.bcl), file(row.sample_sheet) ] }
+            | unique
         
         // Demultiplex and extract reads
         fastq            = demultiplex_bcl_files(cohorts_ch)
         fastq_retrieved  = extract_by_index(fastq.undetermined, fastq.stats)
     } else if ( params.step == 'extract' ) {
-        // Requires: cohort, undetermined, stats
+        // Requires: cohort, undetermined, stats, read
         // Generates: fastq.undetermined, fastq.stats
-        fastq = Channel.fromPath(params.cohorts)
+        undetermined = Channel.fromPath(params.cohorts)
             | splitCsv(header: true, sep: ',')
-            | map { row -> [ row.cohort, file(row.undetermined), file(row.stats) ] }
-            | multiMap {
-                undetermined : [ it[0], 'Undetermined', it[1].simpleName, it[1] ]
-                stats        : [ it[0], it[2] ]
-            }
+            | map { row -> [ row.cohort, 'Undetermined', row.undetermined.split('/|\\.')[1], row.read, file(row.undetermined) ] }
+
+        stats = Channel.fromPath(params.cohorts)
+            | splitCsv(header: true, sep: ',')
+            | map { row -> [ row.cohort, file(row.stats) ] }
+
         // Extract reads from fastq files
-        fastq_retrieved  = extract_by_index(fastq.undetermined, fastq.stats)
+        fastq_retrieved  = extract_by_index(undetermined, stats)
     }
 
     if ( params.check ) {

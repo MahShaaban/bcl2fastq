@@ -1,5 +1,5 @@
 process RETRIEVE {
-    tag "${cohort}:${sampleid}:${index}:chunk_${from}-${to}"
+    tag "${cohort}:${sampleid}:${index}:${read}:${from}-${to}"
 
     label 'simple'
     label 'seqkit'
@@ -7,12 +7,12 @@ process RETRIEVE {
     publishDir("${params.output_dir}/fastq_retrieved", mode: 'copy')
 
     input:
-    tuple val(cohort), val(sampleid), val(index), val(from), val(to),
+    tuple val(cohort), val(sampleid), val(index), val(read), val(from), val(to),
           path(fastq), path(fastq_ids)
 
     output:
-    tuple val(cohort), val(sampleid), val(index), val(from), val(to),
-          path("${cohort}.${sampleid}.${index}.chunk_${from}-${to}.fastq.gz")
+    tuple val(cohort), val(sampleid), val(index), val(read), val(from), val(to),
+          path("${cohort}.${sampleid}.${index}.${read}_chunk_${from}-${to}.fastq.gz")
 
     script:
     """
@@ -22,6 +22,6 @@ process RETRIEVE {
     -j ${task.cpus} \
     -f ${fastq_ids} \
     ${fastq} \
-    -o ${cohort}.${sampleid}.${index}.chunk_${from}-${to}.fastq.gz
+    -o ${cohort}.${sampleid}.${index}.${read}_chunk_${from}-${to}.fastq.gz
     """
 }

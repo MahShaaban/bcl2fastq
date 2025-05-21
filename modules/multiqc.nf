@@ -7,7 +7,8 @@ process MULTIQC {
     publishDir("${params.output_dir}/multiqc", mode: 'copy')
 
     input:
-    tuple val(cohort), val(sampleid), val(sample), path(html), path(zip)
+    tuple val(cohort), val(sampleid), val(sample), val(read),
+          path(html), path(zip)
 
     output:
     tuple val(cohort), val(sampleid),
