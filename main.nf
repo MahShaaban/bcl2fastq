@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 // Include modules
-include { BCL2FASTQ }   from './modules/bcl2fastq.nf'
+include { BCLCONVERT }  from './modules/bclconvert.nf'
 include { FASTQC }      from './modules/fastqc.nf'
 include { MULTIQC }     from './modules/multiqc.nf'
 include { STATS }       from './modules/stats.nf'
@@ -21,7 +21,8 @@ workflow demultiplex_bcl_files {
     main:
     // Convert bcl files to fastq
     cohorts
-        | BCL2FASTQ
+        | BCLCONVERT
+        | view
         | multiMap {
             fastq   : [ it[0], it[1] ]
             reports : [ it[0], it[2] ]
