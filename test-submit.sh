@@ -19,16 +19,16 @@ cd test/
 # cp results/Stats.json input/
 
 # Make inputs
-echo -e "cohort,bcl,sample_sheet,undetermined,stats,read" > input/cohorts.info.csv
-echo -e "pheno,input/200624_A00834_0183_BHMTFYDRXX,input/SampleSheet.csv,input/Undetermined_S0_L001_R1_001.fastq.gz,input/Stats.json,R1" >> input/cohorts.info.csv
-echo -e "pheno,input/200624_A00834_0183_BHMTFYDRXX,input/SampleSheet.csv,input/Undetermined_S0_L001_R2_001.fastq.gz,input/Stats.json,R2" >> input/cohorts.info.csv
+echo -e "cohort,bcl,sample_sheet,undetermined,unknown,read" > input/cohorts.info.csv
+echo -e "pheno,input/200624_A00834_0183_BHMTFYDRXX,input/SampleSheet.csv,input/Undetermined_S0_L001_R1_001.fastq.gz,input/Top_Unknown_Barcodes.csv,R1" >> input/cohorts.info.csv
+echo -e "pheno,input/200624_A00834_0183_BHMTFYDRXX,input/SampleSheet.csv,input/Undetermined_S0_L001_R2_001.fastq.gz,input/Top_Unknown_Barcodes.csv,R2" >> input/cohorts.info.csv
 
 # Run nextflow
 module load Nextflow
 
 nextflow run ../main.nf \
     --output_dir ./results/ \
-    -profile test,local \
+    -profile test_extract,local \
     -resume
 
 # mv .nextflow.log nextflow.log

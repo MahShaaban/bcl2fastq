@@ -22,11 +22,10 @@ workflow demultiplex_bcl_files {
     // Convert bcl files to fastq
     cohorts
         | BCLCONVERT
-        | view
         | multiMap {
             fastq   : [ it[0], it[1] ]
             reports : [ it[0], it[2] ]
-            stats   : [ it[0], it[3] ]
+            logs   : [ it[0], it[3] ]
         }
         | set { bcl_out }
     
@@ -45,19 +44,29 @@ workflow demultiplex_bcl_files {
             determined   : it[1] != 'Undetermined'
         }
         | set { fastq }
+    
+    bcl_out.reports
+        | transpose 
+        | branch { 
+            known:   it.last().simpleName == 'Demultiplex_Stats'
+            unknown: it.last().simpleName == 'Top_Unknown_Barcodes'
+        }
+        | set { barcodes }
 
     emit:
         determined   = fastq.determined
         undetermined = fastq.undetermined
         reports      = bcl_out.reports
-        stats        = bcl_out.stats
+        logs         = bcl_out.logs
+        known_barcodes   = barcodes.known
+        unknown_barcodes = barcodes.unknown
 }
 
 // Extract reads from fastq files based on index sequences
 workflow extract_by_index {
     take: 
         undetermined
-        stats
+        unkown
 
     main:
     // Generate ranges channel
@@ -72,13 +81,11 @@ workflow extract_by_index {
         | set { fastq }
 
     // Get index sequences from fastq files
-    stats
-        | STATS
-        | map { [ it.first(), it.last() ] }
-        | splitCsv(header: true, sep: '\t')
-        | map { cohort, row -> [cohort, [ Flowcell: row.Flowcell, LaneNumber: row.LaneNumber, IndexSequence: row.IndexSequence, ReadNumber: row.ReadNumber ]]}
+    unkown
+        | splitCsv(header: true, sep: ',')
+        | map { cohort, row -> [cohort, [ lane: row.Lane, index1: row.index, index2: row.index2, nread: row.'# Reads', punknown: row.'% of Unknown Barcodes', pall: row.'% of All Reads' ]]}
         | unique
-        | filter { it.last().ReadNumber.toInteger() > params.min_read } 
+        | filter { it.last().nread.toInteger() > params.min_read } 
         | combine(fastq, by: 0)
         | EXTRACT
         | filter { it.last().size() > 0 }
@@ -89,7 +96,8 @@ workflow extract_by_index {
         | groupTuple(by: [0, 1, 2])
         | ( params.paired ? PAIR : map { it } )
         | transpose
-        | map { [ it[0], it[1], "${it[0]}.${it[1]}.${it[2]}.${it[3]}", it[3], it[4] ] }
+        | map { [ it[0], it[1], "${it[4].name.replaceAll(/\.fastq\.gz$/, '')}", it[3], it[4] ] }
+        | view
         | set { retrieved }
 
     emit:
@@ -127,7 +135,7 @@ workflow {
         
         // Demultiplex and extract reads
         fastq            = demultiplex_bcl_files(cohorts_ch)
-        fastq_retrieved  = extract_by_index(fastq.undetermined, fastq.stats)
+        fastq_retrieved  = extract_by_index(fastq.undetermined, fastq.unknown_barcodes)
     } else if ( params.step == 'extract' ) {
         // Requires: cohort, undetermined, stats, read
         // Generates: fastq.undetermined, fastq.stats
@@ -135,12 +143,12 @@ workflow {
             | splitCsv(header: true, sep: ',')
             | map { row -> [ row.cohort, 'Undetermined', row.undetermined.split('/|\\.')[1], row.read, file(row.undetermined) ] }
 
-        stats = Channel.fromPath(params.cohorts)
+        unknown = Channel.fromPath(params.cohorts)
             | splitCsv(header: true, sep: ',')
-            | map { row -> [ row.cohort, file(row.stats) ] }
+            | map { row -> [ row.cohort, file(row.unknown) ] }
 
         // Extract reads from fastq files
-        fastq_retrieved  = extract_by_index(undetermined, stats)
+        fastq_retrieved  = extract_by_index(undetermined, unknown)
     }
 
     if ( params.check ) {

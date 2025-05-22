@@ -1,5 +1,5 @@
 process EXTRACT {
-    tag "${cohort}:${sampleid}:${index.IndexSequence}:${read}:${from}-${to}"
+    tag "${cohort}:${sampleid}:${index.index1}+${index.index2}:${read}:${from}-${to}"
 
     label 'simple'
     label 'seqkit'
@@ -11,17 +11,17 @@ process EXTRACT {
           val(sampleid), val(sample), val(read), val(from), val(to), path(fastq)
 
     output:
-    tuple val(cohort), val(sampleid), val("${index.IndexSequence}"), val(read), val(from), val(to),
+    tuple val(cohort), val(sampleid), val("${index.index1}+${index.index2}"), val(read), val(from), val(to),
 		  path(fastq),
-		  path("${cohort}.${sampleid}.${index.IndexSequence}.${read}_chunk_${from}-${to}.ids.txt")
+		  path("${cohort}.${sampleid}.${index.index1}+${index.index2}.${read}_chunk_${from}-${to}.ids.txt")
 
     script:
     """
     #!/bin/bash
     # Get read ids in fastq file based on index
     seqkit seq ${fastq} --name -j ${task.cpus} | \
-    grep ${index.IndexSequence} | \
+    grep ${index.index1}+${index.index2} | \
     cut -d ' ' -f 1 \
-    > ${cohort}.${sampleid}.${index.IndexSequence}.${read}_chunk_${from}-${to}.ids.txt
+    > ${cohort}.${sampleid}.${index.index1}+${index.index2}.${read}_chunk_${from}-${to}.ids.txt
     """
 }
