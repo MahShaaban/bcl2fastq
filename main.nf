@@ -86,9 +86,9 @@ workflow extract_by_index {
         | groupTuple(by: [0, 1, 2, 3])
         | COMBINE
         | groupTuple(by: [0, 1, 2])
-        | PAIR
+        | ( params.paired ? PAIR : map { it } )
         | transpose
-        | map { [ it[0], it[1], "${it[0]}.${it[1]}.${it[2]}.${it[3]}.paired", it[3], it[4] ] }
+        | map { [ it[0], it[1], "${it[0]}.${it[1]}.${it[2]}.${it[3]}", it[3], it[4] ] }
         | set { retrieved }
 
     emit:

@@ -28,7 +28,7 @@ module load Nextflow
 
 nextflow run ../main.nf \
     --output_dir ./results/ \
-    -profile test_extract,local \
+    -profile test,local \
     -resume
 
 # mv .nextflow.log nextflow.log

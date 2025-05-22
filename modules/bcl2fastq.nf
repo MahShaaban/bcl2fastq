@@ -13,16 +13,14 @@ process BCL2FASTQ {
     // samplename_sampleorder_lanenumber_readnumber_001.fastq.gz
     tuple val(cohort),
           path("*.fastq.gz"),
-          path("${cohort}_reports"),
-          path("${cohort}_interop"),
-          path("${cohort}_stats/Stats.json")
+          path("Reports"),
+          path("Stats/Stats.json")
 
     script:
     """
     #!/bin/bash
     bcl2fastq \
         --runfolder-dir ${bcl_dir} \
-        --input-dir ${bcl_dir}/Data/Intensities/BaseCalls/L008 \
         --sample-sheet ${sample_sheet} \
         --adapter-stringency ${params.stringency} \
         --fastq-compression-level ${params.compression} \
@@ -33,9 +31,6 @@ process BCL2FASTQ {
         --ignore-missing-bcls \
         --find-adapters-with-sliding-window \
         --no-bgzf-compression \
-        --stats-dir ${cohort}_stats \
-        --reports-dir ${cohort}_reports \
-        --interop-dir ${cohort}_interop \
         --output-dir .
     """
 }

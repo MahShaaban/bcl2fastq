@@ -11,7 +11,7 @@ process PAIR {
 
     output:
     tuple val(cohort), val(sampleid), val(index), val(read),
-          path("${cohort}.${sampleid}.${index}.{${read.join(',')}}.paired.fastq.gz")
+          path("${cohort}.${sampleid}.${index}.{${read.join(',')}}.fastq.gz")
 
     script:
     """
