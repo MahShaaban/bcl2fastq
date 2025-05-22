@@ -10,28 +10,32 @@ process BCL2FASTQ {
     tuple val(cohort), path(bcl_dir), path(sample_sheet)
 
     output:
+    // samplename_sampleorder_lanenumber_readnumber_001.fastq.gz
     tuple val(cohort),
-          path("*_*_*_R1_001.fastq.gz"), // samplename_sampleorder_lanenumber_readnumber_001.fastq.gz
+          path("*.fastq.gz"),
           path("${cohort}_reports"),
+          path("${cohort}_interop"),
           path("${cohort}_stats/Stats.json")
 
     script:
     """
     #!/bin/bash
     bcl2fastq \
-        -R ${bcl_dir} \
-        -o . \
+        --runfolder-dir ${bcl_dir} \
+        --input-dir ${bcl_dir}/Data/Intensities/BaseCalls/L008 \
         --sample-sheet ${sample_sheet} \
         --adapter-stringency ${params.stringency} \
         --fastq-compression-level ${params.compression} \
         --barcode-mismatches ${params.mismatches} \
+        --processing-threads ${task.cpus} \
+        --loading-threads 4 \
+        --writing-threads 4 \
         --ignore-missing-bcls \
         --find-adapters-with-sliding-window \
         --no-bgzf-compression \
-        --loading-threads ${task.cpus} \
-        --processing-threads ${task.cpus} \
-        --writing-threads ${task.cpus} \
         --stats-dir ${cohort}_stats \
-        --reports-dir ${cohort}_reports
+        --reports-dir ${cohort}_reports \
+        --interop-dir ${cohort}_interop \
+        --output-dir .
     """
 }
