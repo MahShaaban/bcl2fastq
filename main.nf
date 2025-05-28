@@ -97,7 +97,6 @@ workflow extract_by_index {
         | ( params.paired ? PAIR : map { it } )
         | transpose
         | map { [ it[0], it[1], "${it[4].name.replaceAll(/\.fastq\.gz$/, '')}", it[3], it[4] ] }
-        | view
         | set { retrieved }
 
     emit:
