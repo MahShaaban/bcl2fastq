@@ -5,6 +5,7 @@ nextflow.enable.dsl=2
 // Include modules
 include { BCLCONVERT }  from './modules/bclconvert.nf'
 include { FASTQC }      from './modules/fastqc.nf'
+include { SEQSTATS }    from './modules/seqstats.nf'
 include { MULTIQC }     from './modules/multiqc.nf'
 include { STATS }       from './modules/stats.nf'
 include { EXTRACT }     from './modules/extract.nf'
@@ -25,7 +26,7 @@ workflow demultiplex_bcl_files {
         | multiMap {
             fastq   : [ it[0], it[1] ]
             reports : [ it[0], it[2] ]
-            logs   : [ it[0], it[3] ]
+            logs    : [ it[0], it[3] ]
         }
         | set { bcl_out }
     
@@ -114,9 +115,22 @@ workflow check_quality {
         | FASTQC
         | groupTuple(by: [0, 1])
         | MULTIQC
-    // TODO: add seqkit fx2tab, and stats
+        | set { multiqc }
+
+    // seqkit stats
+    fastq
+        | SEQSTATS
+        | map { it.last() }
+        | collectFile (
+            keepHeader: true,
+            storeDir: "${params.output_dir}/seqstats",
+            name: "seqstats_summary.tsv"
+        )
+        | set { seqstats }
+
     emit:
-        qc = MULTIQC.out
+        multiqc
+        seqstats
 }
 
 workflow {
