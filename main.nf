@@ -83,8 +83,19 @@ workflow extract_by_index {
     // Get index sequences from fastq files
     unkown
         | splitCsv(header: true, sep: ',')
-        | map { cohort, row -> [cohort, [ lane: row.Lane, index1: row.index, index2: row.index2, nread: row.'# Reads', punknown: row.'% of Unknown Barcodes', pall: row.'% of All Reads' ]]}
+        | multiMap { cohort, row -> 
+            both   : [ cohort, row.Lane, "${row.index}+${row.index2}", row.'# Reads', row.'% of Unknown Barcodes', row.'% of All Reads' ]
+            index1 : [ cohort, row.Lane, row.index,                    row.'# Reads',  row.'% of Unknown Barcodes', row.'% of All Reads' ]
+            index2 : [ cohort, row.Lane, row.index2,                   row.'# Reads',  row.'% of Unknown Barcodes', row.'% of All Reads' ]
+        }
+        | set { unknown_index }
+
+    unknown_index.both
+        | ( params.index1 ? concat(unknown_index.index1) : map { it } )
+        | ( params.index2 ? concat(unknown_index.index2) : map { it } )
         | unique
+        | groupTuple(by: [0, 1, 2] )
+        | map { [ it[0], [ lane: it[1], index: it[2], nread: it[3].collect { it.toInteger() }.sum()]] }
         | filter { it.last().nread.toInteger() > params.min_read } 
         | combine(fastq, by: 0)
         | EXTRACT
