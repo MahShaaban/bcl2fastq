@@ -35,3 +35,14 @@ workflow check_quality {
         multiqc
         seqstats
 }
+// [pheno, Undetermined, pheno.Undetermined.ACGATTGCTG.R1.paired, R1, /data/rds/DGE/DUDGE/MOPOPGEN/mahmed03/pipelines/demultiplex-bcl-files/test/work/9e/e366817d7c9dbc8a9ca60e54b5d4e9/pheno.Undetermined.ACGATTGCTG.R1.paired.fastq.gz]
+
+workflow {
+    // Get undetermined from cohorts
+    fastq = Channel.fromPath(params.cohorts)
+        | splitCsv(header: true, sep: ',')
+        | map { row -> [ row.cohort, row.sample_id, row.sample, row.read, file(row.fastq) ] }
+
+    // Check quality of fastq files
+    check_quality(fastq)
+}

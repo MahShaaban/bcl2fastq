@@ -53,3 +53,14 @@ workflow demultiplex_bcl_files {
         known_barcodes   = barcodes.known
         unknown_barcodes = barcodes.unknown
 }
+
+workflow {
+    // Get cohorts info
+    cohorts_ch = Channel.fromPath(params.cohorts)
+        | splitCsv(header: true, sep: ',')
+        | map { row -> [ row.cohort, file(row.bcl), file(row.sample_sheet) ] }
+        | unique
+        
+    // Demultiplex and extract reads
+    demultiplex_bcl_files(cohorts_ch)
+}

@@ -60,3 +60,18 @@ workflow extract_by_index {
     emit:
         retrieved = retrieved
 }
+
+workflow {
+    // Get undetermined from cohorts
+    undetermined = Channel.fromPath(params.cohorts)
+        | splitCsv(header: true, sep: ',')
+        | map { row -> [ row.cohort, 'Undetermined', row.undetermined.split('/|\\.')[1], row.read, file(row.undetermined) ] }
+
+    // Get unknown barcodes from cohorts
+    unknown = Channel.fromPath(params.cohorts)
+        | splitCsv(header: true, sep: ',')
+        | map { row -> [ row.cohort, file(row.unknown) ] }
+
+    // Extract reads from fastq files
+    extract_by_index(undetermined, unknown)
+}
